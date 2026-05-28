@@ -1,0 +1,48 @@
+# LaTeX auxiliary files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.out
+*.toc
+*.xdv
+*.synctex.gz
+*.bbl
+*.blg
+*.brf
+# Ignore PDF builds if you want to keep only source; comment out if you want to keep PDFs
+#*.pdf
+
+# Simulation outputs
+work-obj93.cf
+*.ghw
+*.vcd
+*.wcf
+# GHDL
+work/
+# Questa/ModelSim
+transcript
+vsim.wlf
+# Riviera
+*.ali
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor backups
+*~
+*.swp
+
+# Archives
+*.zip
+*.tar.gz
+
+# Misc
+*.bak
+*.tmp
