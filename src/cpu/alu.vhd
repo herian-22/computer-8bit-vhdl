@@ -7,13 +7,13 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity alu is
-  port (
-    A       : in  std_logic_vector(7 downto 0);
-    B       : in  std_logic_vector(7 downto 0);
-    ALU_Sel : in  std_logic_vector(3 downto 0);
-    Result  : out std_logic_vector(7 downto 0);
-    NZVC    : out std_logic_vector(3 downto 0)
-  );
+    port (
+      A       : in  std_logic_vector(7 downto 0);
+      B       : in  std_logic_vector(7 downto 0);
+      ALU_Sel : in  std_logic_vector(3 downto 0);
+      Result  : out std_logic_vector(7 downto 0);
+      NZVC    : out std_logic_vector(3 downto 0)
+    );
 end entity alu;
 
 architecture rtl of alu is
