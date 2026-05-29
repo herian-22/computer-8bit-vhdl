@@ -46,3 +46,9 @@ Thumbs.db
 # Misc
 *.bak
 *.tmp
+
+# Unnecessary directories
+extracted/
+docs/
+books/
+tools/
