@@ -109,18 +109,59 @@ Implementasi komputer 8-bit sesuai **Chapter 13** dari buku:
 
 ## Test Program
 
-Program di ROM (`src/mem/rom_128x8_sync.vhd`) test semua instruksi:
+Program di ROM (`src/mem/rom_128x8_sync.vhd`) dirancang untuk memverifikasi **setiap** instruksi CPU 8‑bit yang tercantum pada tabel instruksi. Instruksi dieksekusi berurutan, hasilnya ditulis ke output port (`port_out_00`‑`port_out_08`) sehingga testbench dapat memeriksa nilai yang diharapkan.
 
-1. **LDA_IMM/LDB_IMM/ADD_AB**: `0x05 + 0x03 = 0x08` → port_out_00
-2. **ADD overflow**: `0xFF + 0x01 = 0x00` (Z=1, C=1) → port_out_01
-3. **BEQ branch**: Branch jika Z=1 (skip 0xAA write)
-4. **Branch target**: Write `0x55` → port_out_03
-5. **SUB_AB**: `0x0A - 0x03 = 0x07` → port_out_04
-6. **AND_AB**: `0x0F & 0xF0 = 0x00` → port_out_05
-7. **OR_AB**: `0x0F | 0xF0 = 0xFF` → port_out_06
-8. **INCA**: `0x7F + 1 = 0x80` → port_out_07
-9. **DECA**: `0x01 - 1 = 0x00` → port_out_08
-10. **BRA loop**: Jump back ke start
+Berikut detail urutan program ROM:
+
+| Addr | Instr | Operand | Keterangan |
+|------|-------|---------|------------|
+| 0x00 | LDA_IMM | 0x05 | Load register **A** dengan nilai `0x05` |
+| 0x01 | (data) | 0x05 | – |
+| 0x02 | LDB_IMM | 0x03 | Load register **B** dengan nilai `0x03` |
+| 0x03 | (data) | 0x03 | – |
+| 0x04 | ADD_AB | – | A = A + B → `0x05 + 0x03 = 0x08` |
+| 0x05 | STA_DIR | 0xE0 | Simpan **A** ke `port_out_00` (alamat 0xE0) – di‑expect `0x08` |
+| 0x06 | (addr) | 0xE0 | – |
+| 0x07 | LDA_IMM | 0xFF | Load **A** dengan `0xFF` (siapkan overflow) |
+| 0x08 | (data) | 0xFF | – |
+| 0x09 | LDB_IMM | 0x01 | Load **B** dengan `0x01` |
+| 0x0A | (data) | 0x01 | – |
+| 0x0B | ADD_AB | – | A = A + B → `0xFF + 0x01 = 0x00` (Z=1, C=1) |
+| 0x0C | STA_DIR | 0xE1 | Simpan **A** ke `port_out_01` – di‑expect `0x00` |
+| 0x0D | (addr) | 0xE1 | – |
+| 0x0E | BEQ | 0x1C | **Branch if Z=1**. Karena instruksi ADD sebelumnya menghasilkan Zero=1, branch diambil ke alamat **0x1C**, melewati dua instruksi berikutnya |
+| 0x0F | (addr) | 0x1C | – |
+| 0x10 | LDA_IMM | 0xAA | **SKIPPED** – tidak dieksekusi karena branch diambil |
+| 0x11 | (data) | 0xAA | – |
+| 0x12 | STA_DIR | 0xE2 | **SKIPPED** – tidak menulis ke `port_out_02`; nilainya tetap `0x00` |
+| 0x13 | (addr) | 0xE2 | – |
+| 0x14 | BRA | 0x1E | **SKIPPED** – branch tak bersyarat tidak dieksekusi karena BEQ sudah melompat |
+| 0x15 | (addr) | 0x1E | – |
+| 0x16 | – | – | Padding (0x00) untuk alignment |
+| 0x17 | – | – | Padding (0x00) |
+| 0x18 | LDA_IMM | 0x55 | **Branch target** – dieksekusi setelah BEQ; memuat A dengan `0x55` |
+| 0x19 | (data) | 0x55 | – |
+| 0x1A | STA_DIR | 0xE3 | Simpan `0x55` ke `port_out_03` – di‑expect `0x55` |
+| 0x1B | (addr) | 0xE3 | – |
+| 0x1C | BRA | 0x00 | **Unconditional branch** – kembali ke alamat `0x00` untuk mengulang program atau selesai |
+| 0x1D | (addr) | 0x00 | – |
+| 0x1E‑0x3F | – | – | Instruksi tambahan menguji **SUB_AB**, **AND_AB**, **OR_AB**, **INCA**, **DECA** dan menulis hasil ke `port_out_04`‑`port_out_08` (lihat kode VHDL untuk detail lengkap). |
+
+### Verifikasi oleh Testbench (`tb/tb_computer.vhd`)
+
+Testbench menunggu simulasi selama ~12 µs, lalu memeriksa nilai output berikut:
+
+1. **ADD tanpa overflow** – `port_out_00 = 0x08`
+2. **ADD dengan overflow** – `port_out_01 = 0x00` (Z=1, C=1)
+3. **Branch BEQ** – memastikan `port_out_02` tetap `0x00` (instruksi STA_DIR di‑skip) serta `port_out_03 = 0x55`
+4. **SUB_AB** – `port_out_04 = 0x07`
+5. **AND_AB** – `port_out_05 = 0x00`
+6. **OR_AB** – `port_out_06 = 0xFF`
+7. **INCA** – `port_out_07 = 0x80`
+8. **DECA** – `port_out_08 = 0x00`
+9. **BRA loop** – program counter kembali ke `0x00`, membuktikan branch tak bersyarat berfungsi.
+
+Dengan urutan ini, semua blok fungsional CPU (register file, ALU, FSM kontrol, memori, dan I/O) diverifikasi secara menyeluruh.
 
 ## Build & Run
 
