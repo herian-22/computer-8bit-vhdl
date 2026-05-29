@@ -58,7 +58,7 @@ architecture rtl of rom_128x8_sync is
   -- 0x1C  BRA     0x00     Loop back to start
 
   constant ROM : rom_type := (
-    -- Test 1: LDA_IMM + LDB_IMM + ADD_AB + STA_DIR
+    -- Test 1: LDA_IMM 0x05 + LDB_IMM 0x03 = 0x08 -> port_out_00
     0  => LDA_IMM,
     1  => x"05",
     2  => LDB_IMM,
@@ -67,7 +67,7 @@ architecture rtl of rom_128x8_sync is
     5  => STA_DIR,
     6  => x"E0",
     
-    -- Test 2: ADD with overflow (0xFF + 0x01 = 0x00, Z=1, C=1)
+    -- Test 2: LDA_IMM 0xFF + LDB_IMM 0x01 = 0x00 (Z=1,C=1) -> port_out_01
     7  => LDA_IMM,
     8  => x"FF",
     9  => LDB_IMM,
@@ -76,69 +76,68 @@ architecture rtl of rom_128x8_sync is
     12 => STA_DIR,
     13 => x"E1",
     
-    -- Test 3: BEQ (branch if Z=1, should take branch)
+    -- Test 3: BEQ (branch if Z=1) - should skip next two instructions
     14 => BEQ,
-    15 => x"16",
+    15 => x"1C",  -- Skip to 0x1C (after the two skipped instructions)
     
-    -- Skipped section (should not execute)
-    16 => LDA_IMM,
+    -- Skipped instructions (should NOT execute if BEQ taken)
+    16 => LDA_IMM,  -- These should be skipped
     17 => x"AA",
-    18 => STA_DIR,
+    18 => STA_DIR,  -- These should be skipped
     19 => x"E2",
-    20 => BRA,
-    21 => x"1E",
     
-    -- Branch target: store 0x55 to port_out_03
-    22 => LDA_IMM,
-    23 => x"55",
-    24 => STA_DIR,
-    25 => x"E3",
+    -- Branch target: LDA_IMM 0x55 -> port_out_03
+    20 => LDA_IMM,
+    21 => x"55",
+    22 => STA_DIR,
+    23 => x"E3",
     
-    -- Test 4: SUB_AB
-    26 => LDA_IMM,
-    27 => x"0A",
-    28 => LDB_IMM,
-    29 => x"03",
-    30 => SUB_AB,
-    31 => STA_DIR,
-    32 => x"E4",
+    -- Test 4: LDA_IMM 0x0A + LDB_IMM 0x03 = 0x07 -> port_out_04
+    24 => LDA_IMM,
+    25 => x"0A",
+    26 => LDB_IMM,
+    27 => x"03",
+    28 => SUB_AB,
+    29 => STA_DIR,
+    30 => x"E4",
     
-    -- Test 5: AND_AB
-    33 => LDA_IMM,
-    34 => x"0F",
-    35 => LDB_IMM,
-    36 => x"F0",
-    37 => AND_AB,
-    38 => STA_DIR,
-    39 => x"E5",
+    -- Test 5: LDA_IMM 0x0F & LDB_IMM 0xF0 = 0x00 -> port_out_05
+    31 => LDA_IMM,
+    32 => x"0F",
+    33 => LDB_IMM,
+    34 => x"F0",
+    35 => AND_AB,
+    36 => STA_DIR,
+    37 => x"E5",
     
-    -- Test 6: OR_AB
-    40 => LDA_IMM,
-    41 => x"0F",
-    42 => LDB_IMM,
-    43 => x"F0",
-    44 => OR_AB,
-    45 => STA_DIR,
-    46 => x"E6",
+    -- Test 6: LDA_IMM 0x0F | LDB_IMM 0xF0 = 0xFF -> port_out_06
+    38 => LDA_IMM,
+    39 => x"0F",
+    40 => LDB_IMM,
+    41 => x"F0",
+    42 => OR_AB,
+    43 => STA_DIR,
+    44 => x"E6",
     
-    -- Test 7: INCA
-    47 => LDA_IMM,
-    48 => x"7F",
-    49 => INCA,
-    50 => STA_DIR,
-    51 => x"E7",
+    -- Test 7: LDA_IMM 0x7F + 1 (INCA) = 0x80 -> port_out_07
+    45 => LDA_IMM,
+    46 => x"7F",
+    47 => INCA,
+    48 => STA_DIR,
+    49 => x"E7",
     
-    -- Test 8: DECA
-    52 => LDA_IMM,
-    53 => x"01",
-    54 => DECA,
-    55 => STA_DIR,
-    56 => x"E8",
+    -- Test 8: LDA_IMM 0x01 - 1 (DECA) = 0x00 -> port_out_08
+    50 => LDA_IMM,
+    51 => x"01",
+    52 => DECA,
+    53 => STA_DIR,
+    54 => x"E8",
     
-    -- Loop back
-    57 => BRA,
-    58 => x"00",
+    -- Loop back to start
+    55 => BRA,
+    56 => x"00",
     
+    -- Fill remaining addresses
     others => x"00"
   );
 
