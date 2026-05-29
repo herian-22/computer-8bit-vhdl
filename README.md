@@ -1,5 +1,13 @@
 # 8-bit Computer System (VHDL)
 
+---
+
+## README Update
+
+Added description of test program, build instructions, expected output, and waveform guide.
+
+---
+
 Implementasi komputer 8-bit sesuai **Chapter 13** dari buku:
 > *Introduction to Logic Circuits & Logic Design with VHDL* (2019)  
 > Brock J. LaMeres
